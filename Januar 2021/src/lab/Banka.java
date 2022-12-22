@@ -7,6 +7,9 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 public class Banka {
 	public void connect() {
@@ -52,7 +55,9 @@ public class Banka {
 			ResultSet rs = st.executeQuery(sql);
 			ResultSetMetaData rsmd = rs.getMetaData();
 			int columnsNumber = rsmd.getColumnCount();
-
+			
+			System.out.format("*** %s ***\n", rsmd.getTableName(1));
+			
 			for (int i = 1; i <= columnsNumber; i++) {
 				if (i > 1)
 					System.out.print("\t");
@@ -74,6 +79,73 @@ public class Banka {
 		} catch (SQLException e) {
 			System.out.println("Greska pri ispisu");
 			System.out.println(e.getMessage());
+		}
+	}
+
+	public int getAccountsOutOfDebt(int idFil, int idKom, boolean error) {
+		try {
+			conn.setAutoCommit(false);
+
+			Queue<Integer> accountsInDebt = new LinkedList<>();
+			Queue<Integer> debt = new LinkedList<>();
+
+			getAccountsInDebt(idKom, accountsInDebt, debt);
+
+			while (!debt.isEmpty() && !accountsInDebt.isEmpty()) {
+				int ammount = debt.poll();
+				int idRac = accountsInDebt.poll();
+				
+				updateAccount(idRac, ammount);
+
+				updateAccountState(idRac);
+
+				int idSta = addItem(idFil, idRac, ammount);
+
+				addPayment(idSta);
+			}
+			
+			if (error)
+				throw new SQLException("Moja greska");
+			
+			conn.commit();
+			
+			System.out.println("Uplata je uspesna.");
+
+		} catch (SQLException e) {
+			try {
+				conn.rollback();
+				System.out.println(e.getMessage());
+				System.out.println("Uplata je neuspesna.");
+			} catch (SQLException e1) {
+				throw new RuntimeException(e1);
+			}
+		} finally {
+			try {
+				conn.setAutoCommit(true);
+			} catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		return 0;
+	}
+
+	private void getAccountsInDebt(int idKom, Queue<Integer> accountsInDebt, Queue<Integer> debt) throws SQLException {
+		String sql = "Select IdRac, -DozvMinus-Stanje from Racun where IdKom = ? and Stanje < -DozvMinus";
+
+		try (PreparedStatement ps = conn.prepareStatement(sql)) {
+			ps.setInt(1, idKom);
+
+			ResultSet rs = ps.executeQuery();
+
+			while (rs.next()) {
+				accountsInDebt.add(rs.getInt(1));
+				debt.add(rs.getInt(2));
+			}
+
+		} catch (SQLException e) {
+			System.out.println("Greska pri dohvatanju racuna u minusu.");
+			throw e;
 		}
 	}
 
@@ -111,6 +183,7 @@ public class Banka {
 			try {
 				conn.setAutoCommit(true);
 			} catch (SQLException e) {
+				throw new RuntimeException(e);
 			}
 		}
 

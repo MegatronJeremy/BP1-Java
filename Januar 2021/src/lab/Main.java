@@ -14,7 +14,9 @@ public class Main {
 			banka.printAllItems();
 			banka.printAllPayments();
 
-			banka.makePayment(1, 6, 10000, true);
+//			banka.makePayment(1, 6, 10000, false);
+			
+			banka.getAccountsOutOfDebt(4, 3, false);
 
 			System.out.println();
 			System.out.println("After payment:");
