@@ -6,6 +6,6 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="E:/OneDrive - Student/OneDrive - student.etf.bg.ac.rs/Materijali 5. Semestar/BP1/Lab 1/Januar 2021/sqlite-jdbc-3.7.2.jar"/>
+	<classpathentry kind="lib" path="E:/OneDrive - Student/OneDrive - student.etf.bg.ac.rs/Materijali 5. Semestar/BP1/Lab 1/Januar 2021-Semestralni 2020/sqlite-jdbc-3.7.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
